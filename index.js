@@ -1,5 +1,10 @@
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
 const { Pool } = require("pg");
+
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL is missing");
+  process.exit(1);
+}
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -8,42 +13,39 @@ const pool = new Pool({
 
 async function insertData() {
   try {
-    // SENSOR 1
+    console.log("Inserting data...");
+
     const sensor1 = {
-      id: "sensor_1",
+      sensor_id: "sensor_1",
       co2: 850,
       humidity: 89.6,
       temperature: 23.2
     };
 
-    // SENSOR 2
     const sensor2 = {
-      id: "sensor_2",
+      sensor_id: "sensor_2",
       co2: 920,
       humidity: 85.1,
       temperature: 24.5
     };
 
-    console.log("Inserting data...");
-
-    // Insert sensor 1
     await pool.query(
-      "INSERT INTO readings (sensor_id, co2, humidity, temperature) VALUES ($1, $2, $3, $4)",
-      [sensor1.id, sensor1.co2, sensor1.humidity, sensor1.temperature]
+      "INSERT INTO readings (co2, humidity, temperature, sensor_id) VALUES ($1, $2, $3, $4)",
+      [sensor1.co2, sensor1.humidity, sensor1.temperature, sensor1.sensor_id]
     );
 
-    // Insert sensor 2
     await pool.query(
-      "INSERT INTO readings (sensor_id, co2, humidity, temperature) VALUES ($1, $2, $3, $4)",
-      [sensor2.id, sensor2.co2, sensor2.humidity, sensor2.temperature]
+      "INSERT INTO readings (co2, humidity, temperature, sensor_id) VALUES ($1, $2, $3, $4)",
+      [sensor2.co2, sensor2.humidity, sensor2.temperature, sensor2.sensor_id]
     );
 
     console.log("Both sensors inserted!");
   } catch (error) {
+    console.error("Insert failed:");
     console.error(error.message);
+    process.exit(1);
   } finally {
     await pool.end();
-    process.exit(0);
   }
 }
 
